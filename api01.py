@@ -20,11 +20,12 @@ items = [
     }
 ]
 
-#def get_all():
+def get_all():
     # Converte o dicionário 'items' para json e armazena em 'var_json'.
-
+    var_json = json.dumps(items, indent=2)
+    
     # Imprime o json.
-    #print(var_json)
+    print(var_json)
     
     
 def get_one(id):
