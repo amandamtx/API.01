@@ -12,94 +12,83 @@ database = './temp_db.db'
 # Retorna como uma 'list' de 'dict'.
 
 
-def get_all_owner():
+def get_all_items():
+    try:
+        # Conectar ao banco de dados SQLite.
+        conn = sqlite3.connect(database)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
 
-    # Cria uma conexão com o banco de dados SQLite.
-    conn = sqlite3.connect(database)
+        # Consulta SQL para selecionar todos os itens ativos.
+        sql = "SELECT * FROM item WHERE item_status != 'off'"
+        cursor.execute(sql)
+        rows_data = cursor.fetchall()
+        conn.close()
 
-    # Define que a troca de dados entre Python e SQLite acontece na for a de Row.
-    conn.row_factory = sqlite3.Row
+        # Converter os resultados em uma lista de dicionários.
+        list_data = []
+        for row_data in rows_data:
+            list_data.append(dict(row_data))
 
-    # Um cursor que aponta para a(s) linha(s) do SQLite.Row que está(ão) sendo acessadas.
-    cursor = conn.cursor()
+        # Retornar os dados ou um erro se nenhum item for encontrado.
+        if list_data:
+            return list_data
+        else:
+            return {"error": "Nenhum item encontrado"}
 
-    # Query para consultar os registrosn na tabela 'item'.
-    sql = "SELECT * FROM owner WHERE owner_status != 'off'"
+    # Tratamento de exceções.
+    except sqlite3.Error as error:
+        return {"error": f"Erro ao acessar o banco de dados: {str(error)}"}
+    except Exception as error:
+        return {"error": f"Erro inesperado: {str(error)}"}
 
-    # Executa o SQL acima no banco de dados.
-    cursor.execute(sql)
-
-    # "Puxa" os dados do cursor para o Python.
-    data = cursor.fetchall()
-
-    # Desconecta do banco de dados.
-    # Guarda recursos, aumenta a segurança, evita corrupção de dados.
-    conn.close()
-
-    # Uma 'list' para armazenar as SQLite.Row no forma de 'dict'.
-    res = []
-
-    # Loop que obtém cada SLite.Row da memória (data).
-    for res_temp in data:
-
-        # Converte a SQLite.Row em 'dict' e adiciona no final da 'list' 'res'.
-        res.append(dict(res_temp))
-
-    # Devolve os dados processados para quem solicitou.
-    return res
+# Função para obter um item específico pelo ID.
 
 
-# Função get_one_item(id)
-# Obtém um 'item' único e válido do banco de dados, identificado pelo 'id'.
-# Retorna como um 'dict'.
+def get_one_item(id):
+    try:
+        # Conectar ao banco de dados SQLite.
+        conn = sqlite3.connect(database)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        # Consulta SQL para selecionar um item específico por ID.
+        sql = "SELECT * FROM item WHERE item_status != 'off' AND item_id = ?"
+        cursor.execute(sql, (id,))
+        row_data = cursor.fetchone()
+        conn.close()
+
+        # Retornar os dados do item ou um erro se não for encontrado.
+        if row_data:
+            return dict(row_data)
+        else:
+            return {"error": "Item não encontrado"}
+    
+    # Tratamento de exceções.
+    except sqlite3.Error as error:
+        return {"error": f"Erro ao acessar o banco de dados: {str(error)}"}
+    except Exception as error:
+        return {"error": f"Erro inesperado: {str(error)}"}
 
 
-def get_one_owner(id):
-
-    # Incializa o banco de dados.
-    conn = sqlite3.connect(database)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-
-    # Query de consulta.
-    sql = "SELECT * FROM owner WHERE owner_status != 'off' AND owner_id = ?"
-
-    # Executa o código passando o valor do ID.
-    cursor.execute(sql, (id,))
-
-    # Retorna o resultado da busca para 'data'.
-    data = cursor.fetchone()
-
-    # Fecha a conexão com o banco de dados.
-    conn.close()
-
-    if data:  # Se o registro existir...
-
-        # Retorna o registro em um 'dict'.
-        return dict(data)
-
-    else:  # Se o registro não chegou...
-
-        # Retorna erro.
-        return {"error": "Registro não encontrado."}
-
-
-# Limpa o console.
+# Limpar a tela do console.
 os.system('cls')
 
-# Exemplo para obter todos os 'item' válidos.
-print(  # Exibe no console.
-     json.dumps(  # No formato JSON.
-         get_all_owner(),  # Os items obtidos desta função.
-         ensure_ascii=False,  # Usando a tabela UTF-8 (acentuação).
-         indent=2  # Formatando o JSON.
-     )
-)
-
-# Exemplo para obter um 'item' pelo ID.
+# Imprimir todos os itens formatados como JSON.
 print(
     json.dumps(
-        get_one_owner(1),
+        get_all_items(),
+        ensure_ascii=False,
+        indent=2
+    )
+)
+
+print('+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+')
+
+# Imprimir um item específico pelo ID formatado como JSON.
+print(
+    json.dumps(
+        get_one_item(1),
         ensure_ascii=False,
         indent=2
     )
