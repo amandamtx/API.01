@@ -17,7 +17,7 @@ database = "./temp_db.db"
 def prefix_remove(prefix, data):
 
     # Função que remove os prefixos dos nomes dos campos de um 'dict'.
-    # Por exemplo, prefix_remove('item_', { 'item_id': 2, 'item_name': 'Coisa', 'item_status': 'on' })
+    # Por exemplo, prefix_remove('owner_', { 'owner_id': 2, 'owner_name': 'Coisa', 'owner_status': 'on' })
     # retorna { 'id': 2, 'name': 'Coisa', 'status': 'on' }
     # Créditos: Comunidade StackOverflow.
 
@@ -31,12 +31,12 @@ def prefix_remove(prefix, data):
     return new_data
 
 
-@app.route("/items", methods=["GET"])
+@app.route("/owner", methods=["GET"])
 def get_all():
 
-    # Obtém todos os registros válidos de 'item'.
+    # Obtém todos os registros válidos de 'owner'.
     # Request method → GET
-    # Request endpoint → /items
+    # Request endpoint → /owners
     # Response → JSON
 
     try:
@@ -52,32 +52,32 @@ def get_all():
 
         # Executa o SQL.
         cursor.execute(
-            "SELECT * FROM item WHERE item_status = 'on' ORDER BY item_date DESC")
+            "SELECT * FROM owner WHERE owner_status = 'on' ORDER BY owner_name")
 
-        # Retorna todos os resultados da consulta para 'items_rows'.
-        items_rows = cursor.fetchall()
+        # Retorna todos os resultados da consulta para 'owner_rows'.
+        owners_rows = cursor.fetchall()
 
         # Fecha a conexão com o banco de dados
         conn.close()
 
         # Cria uma lista para armazenar os registros.
-        items = []
+        owners = []
 
         # Converte cada SQLite.Row em um dicionário e adiciona à lista 'registros'.
-        for item in items_rows:
-            items.append(dict(item))
+        for owner in owners_rows:
+            owners.append(dict(owner))
 
         # Verifica se há registros antes de retornar...
-        if items:
+        if owners:
 
             # Remove prefixos dos campos.
-            new_items = [prefix_remove('item_', item) for item in items]
+            new_owners = [prefix_remove('owner_', owner) for owner in owners]
 
             # Se houver registros, retorna tudo.
-            return new_items, 200
+            return new_owners, 200
         else:
             # Se não houver registros, retorna erro.
-            return {"error": "Nenhum item encontrado"}, 404
+            return {"error": "Nenhum owner encontrado"}, 404
 
     except sqlite3.Error as e:  # Erro ao processar banco de dados.
         return {"error": f"Erro ao acessar o banco de dados: {str(e)}"}, 500
@@ -86,12 +86,12 @@ def get_all():
         return {"error": f"Erro inesperado: {str(e)}"}, 500
 
 
-@app.route("/items/<int:id>", methods=["GET"])
+@app.route("/owner/<int:id>", methods=["GET"])
 def get_one(id):
 
-    # Obtém um registro único de 'item', identificado pelo 'id'.
+    # Obtém um registro único de 'owner', identificado pelo 'id'.
     # Request method → GET
-    # Request endpoint → /items/<id>
+    # Request endpoint → /owners/<id>
     # Response → JSON
 
     try:
@@ -102,28 +102,28 @@ def get_one(id):
 
         # Executa o SQL.
         cursor.execute(
-            "SELECT * FROM item WHERE item_id = ? AND item_status = 'on'", (id,))
+            "SELECT * FROM owner WHERE owner_id = ? AND owner_status = 'on'", (id,))
 
-        # Retorna o resultado da consulta para 'item_row'.
-        item_row = cursor.fetchone()
+        # Retorna o resultado da consulta para 'owner_row'.
+        owner_row = cursor.fetchone()
 
         # Fecha a conexão com o banco de dados.
         conn.close()
 
         # Se o registro existe...
-        if item_row:
+        if owner_row:
 
-            # Converte SQLite.Row para dicionário e armazena em 'item'.
-            item = dict(item_row)
+            # Converte SQLite.Row para dicionário e armazena em 'owner'.
+            owner = dict(owner_row)
 
             # Remove prefixos dos campos.
-            new_item = prefix_remove('item_', item)
+            new_owner = prefix_remove('owner_', owner)
 
-            # Retorna item.
-            return new_item, 200
+            # Retorna owner.
+            return new_owner, 200
         else:
             # Se não encontrar o registro, retorna erro.
-            return {"error": "Item não encontrado"}, 404
+            return {"error": "Owner não encontrado"}, 404
 
     except sqlite3.Error as e:  # Erro ao processar banco de dados.
         return {"error": f"Erro ao acessar o banco de dados: {str(e)}"}, 500
@@ -132,33 +132,34 @@ def get_one(id):
         return {"error": f"Erro inesperado: {str(e)}"}, 500
 
 
-@app.route('/items', methods=["POST"])
+@app.route('/owner', methods=["POST"])
 def create():
 
-    # Cadastra um novo registro em 'item'.
+    # Cadastra um novo registro em 'owner'.
     # Request method → POST
-    # Request endpoint → /items
+    # Request endpoint → /owners
     # Request body → JSON (raw) → { String:name, String:description, String:location, int:owner }
     # Response → JSON → { "success": "Registro criado com sucesso", "id": id do novo registro }}
 
     try:
         # Recebe dados do body da requisição na forma de 'dict'.
-        new_item = request.get_json()
+        new_owner = request.get_json()
 
         # Conecta ao banco de dados.
         # Observe que 'row_factory' é desnecessário porque não receberemos dados do banco de dados.
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
 
-        # Query que insere um novo registro na tabela 'item'.
-        sql = "INSERT INTO item (item_name, item_description, item_location, item_owner) VALUES (?, ?, ?, ?)"
+        # Query que insere um novo registro na tabela 'owner'.
+        sql = "INSERT INTO owner (owner_name, owner_email, owner_password, owner_birth, owner_status) VALUES (?, ?, ?, ?, ?)"
 
         # Dados a serem inseridos, obtidos do request.
         sql_data = (
-            new_item['name'],
-            new_item['description'],
-            new_item['location'],
-            new_item['owner']
+            new_owner['name'],
+            new_owner['email'],
+            new_owner['password'],
+            new_owner['birth'],
+            new_owner['status']
         )
 
         # Executa a query, fazendo as devidas substituições dos curingas (?) pelos dados (sql_data).
@@ -186,12 +187,12 @@ def create():
         return {"error": f"Erro inesperado: {str(e)}"}, 500
 
 
-@app.route("/items/<int:id>", methods=["DELETE"])
+@app.route("/owner/<int:id>", methods=["DELETE"])
 def delete(id):
 
-    # Marca, como apagado, um registro único de 'item', identificado pelo 'id'.
+    # Marca, como apagado, um registro único de 'owner', identificado pelo 'id'.
     # Request method → DELETE
-    # Request endpoint → /items/<id>
+    # Request endpoint → /owners/<id>
     # Response → JSON → { "success": "Registro apagado com sucesso", "id": id do registro }
 
     try:
@@ -202,19 +203,19 @@ def delete(id):
         cursor = conn.cursor()
 
         # Query que pesquisa a existência do registro.
-        sql = "SELECT item_id FROM item WHERE item_id = ? AND item_status != 'off'"
+        sql = "SELECT owner_id FROM owner WHERE owner_id = ? AND owner_status != 'off'"
 
         # Executa a query.
         cursor.execute(sql, (id,))
 
-        # Retorna o resultado da consulta para 'item_row'.
-        item_row = cursor.fetchone()
+        # Retorna o resultado da consulta para 'owner_row'.
+        owner_row = cursor.fetchone()
 
         # Se o registro exite e está ativo...
-        if item_row:
+        if owner_row:
 
-            # Query para atualizar o item no banco de dados.
-            sql = "UPDATE item SET item_status = 'off' WHERE item_id = ?"
+            # Query para atualizar o owner no banco de dados.
+            sql = "UPDATE owner SET owner_status = 'off' WHERE owner_id = ?"
 
             # Executa a query.
             cursor.execute(sql, (id,))
@@ -235,7 +236,7 @@ def delete(id):
             conn.close()
 
             # Retorna mensagem de erro 404.
-            return {"error": "Item não existe"}, 404
+            return {"error": "Owner não existe"}, 404
 
     except sqlite3.Error as e:  # Erro ao processar banco de dados.
         return {"error": f"Erro ao acessar o banco de dados: {str(e)}"}, 500
@@ -244,12 +245,12 @@ def delete(id):
         return {"error": f"Erro inesperado: {str(e)}"}, 500
 
 
-@app.route("/items/<int:id>", methods=["PUT", "PATCH"])
+@app.route("/owner/<int:id>", methods=["PUT", "PATCH"])
 def edit(id):
 
-    # Edita um registro em 'item', identificado pelo 'id'.
+    # Edita um registro em 'owner', identificado pelo 'id'.
     # Request method → PUT ou PATCH
-    # Request endpoint → /items/<id>
+    # Request endpoint → /owners/<id>
     # Request body → JSON (raw) → { String:name, String:description, String:location, int:owner }
     #       OBS: usando "PATCH", não é necessário enviar todos os campos, apenas os que serão alterados.
     # Response → JSON → { "success": "Registro atualizado com sucesso", "id": id do registro }
@@ -257,20 +258,20 @@ def edit(id):
     try:
 
         # Recebe os dados do corpo da requisição.
-        item_json = request.get_json()
+        owner_json = request.get_json()
 
         # Conecta ao banco de dados.
         conn = sqlite3.connect(database)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        # Loop para atualizar os campos específicos do registro na tabela 'item'.
-        # Observe que o prefixo 'item_' é adicionado ao(s) nome(s) do(s) campo(s).
-        set_clause = ', '.join([f"item_{key} = ?" for key in item_json.keys()])
+        # Loop para atualizar os campos específicos do registro na tabela 'owner'.
+        # Observe que o prefixo 'owner_' é adicionado ao(s) nome(s) do(s) campo(s).
+        set_clause = ', '.join([f"owner_{key} = ?" for key in owner_json.keys()])
 
         # Monta SQL com base nos campos a serem atualizados.
-        sql = f"UPDATE item SET {set_clause} WHERE item_id = ? AND item_status = 'on'"
-        cursor.execute(sql, (*item_json.values(), id))
+        sql = f"UPDATE owner SET {set_clause} WHERE owner_id = ? AND owner_status = 'on'"
+        cursor.execute(sql, (*owner_json.values(), id))
 
         # Commit para salvar as alterações.
         conn.commit()
@@ -286,8 +287,6 @@ def edit(id):
 
     except Exception as e:  # Outros erros.
         return {"error": f"Erro inesperado: {str(e)}"}, 500
-
-   
 
 
 # Roda aplicativo Flask.
