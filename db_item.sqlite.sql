@@ -12,7 +12,7 @@ CREATE TABLE owner (
     owner_email TEXT, 
     owner_password TEXT, 
     owner_birth DATE,
-    owner_status TEXT COMMENTS "Valores: on, off",
+    owner_status TEXT DEFAULT 'on',
     owner_field1 TEXT,
     owner_field2 TEXT
 );

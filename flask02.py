@@ -151,7 +151,7 @@ def create():
         cursor = conn.cursor()
 
         # Query que insere um novo registro na tabela 'owner'.
-        sql = "INSERT INTO owner (owner_name, owner_email, owner_password, owner_birth, owner_status) VALUES (?, ?, ?, ?, ?)"
+        sql = "INSERT INTO owner (owner_name, owner_email, owner_password, owner_birth) VALUES (?, ?, ?, ?)"
 
         # Dados a serem inseridos, obtidos do request.
         sql_data = (
@@ -159,7 +159,6 @@ def create():
             new_owner['email'],
             new_owner['password'],
             new_owner['birth'],
-            new_owner['status']
         )
 
         # Executa a query, fazendo as devidas substituições dos curingas (?) pelos dados (sql_data).
@@ -289,6 +288,84 @@ def edit(id):
         return {"error": f"Erro inesperado: {str(e)}"}, 500
 
 
-# Roda aplicativo Flask.
+# Desafio 1.
+@app.route("/owner/<int:id>/items", methods=["GET"])
+def get_items_by_owner(id):
+
+    try:
+      
+        conn = sqlite3.connect(database) 
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT * FROM item WHERE item_owner = ? AND item_status = 'on'", (id,))
+
+        items_rows = cursor.fetchall()
+
+        conn.close()
+
+        if items_rows:
+            items = [dict(item) for item in items_rows]
+
+            new_items = [prefix_remove('item_', item) for item in items]
+
+            return new_items, 200
+        else:
+            return {"error": "Nenhum item encontrado para este proprietário"}, 404
+
+    except sqlite3.Error as e:  
+        return {"error": f"Erro ao acessar o banco de dados: {str(e)}"}, 500
+
+    except Exception as e:  
+        return {"error": f"Erro inesperado: {str(e)}"}, 500
+
+# Desafio 2.
+@app.route("/items/<int:item_id>", methods=["GET"])
+def get_item_with_owner(item_id):
+
+
+    try:
+        
+        conn = sqlite3.connect(database)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT * FROM item WHERE item_id = ? AND item_status = 'on'", (item_id,))
+        
+        item_row = cursor.fetchone()
+
+        if item_row:
+            item = dict(item_row)
+            
+            owner_id = item['item_owner']
+
+            cursor.execute(
+                "SELECT * FROM owner WHERE owner_id = ? AND owner_status = 'on'", (owner_id,))
+            
+            owner_row = cursor.fetchone()
+
+            if owner_row:
+                owner = dict(owner_row)
+
+                new_item = prefix_remove('item_', item)
+                new_owner = prefix_remove('owner_', owner)
+
+                new_item['owner'] = new_owner
+
+                return new_item, 200
+            else:
+                return {"error": "Proprietário do item não encontrado"}, 404
+        else:
+            return {"error": "Item não encontrado"}, 404
+
+    except sqlite3.Error as e:  
+        return {"error": f"Erro ao acessar o banco de dados: {str(e)}"}, 500
+
+    except Exception as e:  
+        return {"error": f"Erro inesperado: {str(e)}"}, 500
+
+
 if __name__ == "__main__":
     app.run(debug=True)
