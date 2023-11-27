@@ -377,8 +377,8 @@ def search_items(item_name):
 
         # Utiliza a consulta SQL com pesquisa no campo 'item_name' e status válido
         cursor.execute(
-            "SELECT * FROM item WHERE item_status != 'off' AND item_name LIKE '%' || ? || '%'",
-            (item_name,),
+            "SELECT*FROM item WHERE item_status != 'off' AND item_name LIKE '%'||?||'%' OR item_description LIKE '%'||?||'%' OR item_location LIKE '%'||?||'%'",
+            (item_name, item_name, item_name)
         )
 
         items_rows = cursor.fetchall()
@@ -396,7 +396,6 @@ def search_items(item_name):
 
     except Exception as e:
         return {"error": f"Erro inesperado: {str(e)}"}, 500
-
 
 
 if __name__ == "__main__":
