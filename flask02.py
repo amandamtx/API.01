@@ -365,6 +365,39 @@ def get_item_with_owner(item_id):
 
     except Exception as e:  
         return {"error": f"Erro inesperado: {str(e)}"}, 500
+    
+    
+    # Desafio 3
+
+@app.route("/item/search/<string:item_name>", methods=["GET"])
+def search_items(item_name):
+    try:
+        conn = sqlite3.connect(database)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        # Utiliza a consulta SQL com pesquisa no campo 'item_name' e status válido
+        cursor.execute(
+            "SELECT * FROM item WHERE item_status != 'off' AND item_name LIKE '%' || ? || '%'",
+            (item_name,),
+        )
+
+        items_rows = cursor.fetchall()
+        conn.close()
+
+        if items_rows:
+            items = [dict(item) for item in items_rows]
+            new_items = [prefix_remove('item_', item) for item in items]
+            return new_items, 200
+        else:
+            return {"error": "Nenhum item encontrado com o nome especificado"}, 404
+
+    except sqlite3.Error as e:
+        return {"error": f"Erro ao acessar o banco de dados: {str(e)}"}, 500
+
+    except Exception as e:
+        return {"error": f"Erro inesperado: {str(e)}"}, 500
+
 
 
 if __name__ == "__main__":
