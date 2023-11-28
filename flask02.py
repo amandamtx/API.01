@@ -367,7 +367,7 @@ def get_item_with_owner(item_id):
         return {"error": f"Erro inesperado: {str(e)}"}, 500
     
     
-    # Desafio 3
+# Desafio 3
 
 @app.route("/item/search/<string:item_name>", methods=["GET"])
 def search_items(item_name):
@@ -378,8 +378,8 @@ def search_items(item_name):
 
         # Utiliza a consulta SQL com pesquisa no campo 'item_name' e status válido
         cursor.execute(
-            "SELECT * FROM item WHERE item_status != 'off' AND item_name LIKE '%' || ? || '%'",
-            (item_name,),
+            "SELECT*FROM item WHERE item_status != 'off' AND item_name LIKE '%'||?||'%' OR item_description LIKE '%'||?||'%' OR item_location LIKE '%'||?||'%'",
+            (item_name, item_name, item_name)
         )
 
         items_rows = cursor.fetchall()
