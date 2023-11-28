@@ -287,7 +287,7 @@ def edit(id):
     except Exception as e:  # Outros erros.
         return {"error": f"Erro inesperado: {str(e)}"}, 500
 
-def prefix_remove(prefix, data):
+def owner_prefix_remove(prefix, data):
 
     # Função que remove os prefixos dos nomes dos campos de um 'dict'.
     # Por exemplo, prefix_remove('owner_', { 'owner_id': 2, 'owner_name': 'Coisa', 'owner_status': 'on' })
